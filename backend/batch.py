@@ -6,7 +6,6 @@ import sys
 import os
 import json
 from typing import Dict, Any
-import logging
 import logging.config
 import requests
 from video_manager import VideoManager

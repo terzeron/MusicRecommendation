@@ -3,6 +3,7 @@
 
 from typing import Optional
 import sqlite3
+from app import app
 
 
 class DBManager:
@@ -22,8 +23,12 @@ class DBManager:
 
     def get_video_id_by_song_name(self, song_name: str) -> Optional[str]:
         cursor = self.conn.cursor()
-        cursor.execute("SELECT video_id FROM %s WHERE song_name = '%s'" % (self.table_name, song_name))
-        row = cursor.fetchone()
+        try:
+            cursor.execute("SELECT video_id FROM %s WHERE song_name = '%s'" % (self.table_name, song_name))
+            row = cursor.fetchone()
+        except sqlite3.Error as e:
+            app.logger.error(e)
+
         if not row:
             return None
         return row[0]
@@ -32,8 +37,12 @@ class DBManager:
     def get_random_video_id_by_year(self, year: int) -> Optional[str]:
         print("# get_random_video_id_by_year(year=%d)" % year)
         cursor = self.conn.cursor()
-        cursor.execute("SELECT video_id FROM %s WHERE year = %d ORDER BY RANDOM() LIMIT 1" % (self.table_name, year))
-        row = cursor.fetchone()
+        try:
+            cursor.execute("SELECT video_id FROM %s WHERE year = %d ORDER BY RANDOM() LIMIT 1" % (self.table_name, year))
+            row = cursor.fetchone()
+        except sqlite3.Error as e:
+            app.logger.error(e)
+
         if not row:
             return None
         return row[0]
@@ -42,8 +51,12 @@ class DBManager:
     def get_random_video_id(self) -> Optional[str]:
         print("# get_random_video_id()")
         cursor = self.conn.cursor()
-        cursor.execute("SELECT video_id FROM %s ORDER BY RANDOM() LIMIT 1" % self.table_name)
-        row = cursor.fetchone()
+        try:
+            cursor.execute("SELECT video_id FROM %s ORDER BY RANDOM() LIMIT 1" % self.table_name)
+            row = cursor.fetchone()
+        except sqlite3.Error as e:
+            app.logger.error(e)
+
         if not row:
             return None
         return row[0]
@@ -54,5 +67,9 @@ class DBManager:
             video_id = ""
         if not video_name:
             video_name = ""
-        self.conn.execute("INSERT OR REPLACE INTO %s (song_name, year, video_id, video_name) VALUES ('%s', %d, '%s', '%s')" % (self.table_name, song_name, year, video_id, video_name))
-        self.conn.commit()
+        try:
+            self.conn.execute("INSERT OR REPLACE INTO %s (song_name, year, video_id, video_name) VALUES ('%s', %d, '%s', '%s')" % (self.table_name, song_name, year, video_id, video_name))
+            self.conn.commit()
+        except sqlite3.Error as e:
+            app.logger.error(e)
+
