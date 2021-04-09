@@ -9,7 +9,14 @@
   * `cp conf.json.example conf.json`
   * `vi conf.json`
 * `cd backend`
-* in production mode
-  * `./run.sh`
-* in development mode
-  * `./index.py`
+* batch script
+  * in production mode (to team channel)
+    * `env MUSIC_RECOMMENDATION_PROFILE=production ./batch.py`
+  * in development mode (to private channel)
+    * `./batch.py`
+* API
+  * in production mode
+    * `flask run`
+  * in development mode
+    * `env FLASK_ENV=development flask run`
+  * `curl localhost:5000/recommend` or `curl localhost:5000/recomment/2019`
