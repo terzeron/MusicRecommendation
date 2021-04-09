@@ -4,7 +4,7 @@
 
 import re
 from typing import Optional
-from flask import Flask, jsonify, request
+from flask import jsonify, request
 from video_manager import VideoManager
 from app import app
 
@@ -18,7 +18,7 @@ def check() -> str:
 @app.route("/recommend/<year_str>", methods=["GET"])
 def recommend(year_str: str=None) -> str:
     app.logger.debug(request)
-    video_manager = VideoManager()
+    video_manager = VideoManager(app.logger)
     year: Optional[int] = None
     try:
         if year_str:

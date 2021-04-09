@@ -2,8 +2,8 @@
 
 
 from typing import Optional
+import logging
 import sqlite3
-from app import app
 
 
 class DBManager:
@@ -11,7 +11,8 @@ class DBManager:
     table_name = "song_video"
 
 
-    def __init__(self, db_file_name: str, table_name: str) -> None:
+    def __init__(self, logger: logging.Logger, db_file_name: str, table_name: str) -> None:
+        self.logger = logger
         self.db_file_name = db_file_name
         self.table_name = table_name
         self.conn = sqlite3.connect(self.db_file_name)
@@ -27,7 +28,7 @@ class DBManager:
             cursor.execute("SELECT video_id FROM %s WHERE song_name = '%s'" % (self.table_name, song_name))
             row = cursor.fetchone()
         except sqlite3.Error as e:
-            app.logger.error(e)
+            self.logger.error(e)
 
         if not row:
             return None
@@ -41,7 +42,7 @@ class DBManager:
             cursor.execute("SELECT video_id FROM %s WHERE year = %d ORDER BY RANDOM() LIMIT 1" % (self.table_name, year))
             row = cursor.fetchone()
         except sqlite3.Error as e:
-            app.logger.error(e)
+            self.logger.error(e)
 
         if not row:
             return None
@@ -55,7 +56,7 @@ class DBManager:
             cursor.execute("SELECT video_id FROM %s ORDER BY RANDOM() LIMIT 1" % self.table_name)
             row = cursor.fetchone()
         except sqlite3.Error as e:
-            app.logger.error(e)
+            self.logger.error(e)
 
         if not row:
             return None
@@ -71,5 +72,5 @@ class DBManager:
             self.conn.execute("INSERT OR REPLACE INTO %s (song_name, year, video_id, video_name) VALUES ('%s', %d, '%s', '%s')" % (self.table_name, song_name, year, video_id, video_name))
             self.conn.commit()
         except sqlite3.Error as e:
-            app.logger.error(e)
+            self.logger.error(e)
 

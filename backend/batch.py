@@ -12,7 +12,7 @@ from video_manager import VideoManager
 from util import Util
 
 
-logging.config.fileConfig(os.path.dirname(os.path.abspath(sys.argv[0])) + "/logging.conf")
+logging.basicConfig(filename='../run.log', level=logging.DEBUG)
 LOGGER = logging.getLogger()
 
 
@@ -34,7 +34,7 @@ def call_webhook(conf: Dict[str, Any], youtube_video_url: str) -> None:
 
 
 def main() -> int:
-    video_manager = VideoManager()
+    video_manager = VideoManager(LOGGER)
     video_manager.collect()
     video_url = video_manager.choose_random_video_url()
     if not video_url:

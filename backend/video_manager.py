@@ -7,24 +7,25 @@ import json
 import time
 from datetime import datetime, date
 from typing import List, Tuple, Optional
+import logging
 import requests
 from util import Util
 from db_manager import DBManager
-from app import app
 
 
-class VideoManager:
+class VideoManager():
     video_url_prefix = "https://youtube.com/watch?v="
     default_video_url = "https://youtube.com/watch?v=IKlQMqPSwek"
     db_file_name = "song_video.db"
     table_name = "song_video"
 
 
-    def __init__(self) -> None:
+    def __init__(self, logger: logging.Logger) -> None:
+        self.logger = logger
         self.conf = Util.read_config("conf.json")
         if not self.conf or "google_api_key" not in self.conf:
             raise Exception("Configuration error")
-        self.db_manager = DBManager(VideoManager.db_file_name, VideoManager.table_name)
+        self.db_manager = DBManager(self.logger, VideoManager.db_file_name, VideoManager.table_name)
 
 
     def __del__(self) -> None:
@@ -41,20 +42,19 @@ class VideoManager:
             if "items" in data:
                 if len(data["items"]) > 0:
                     for item in data["items"]:
-                        if "snippet" in item and item["snippet"] and "title" in item["snippet"] and re.search(r'([Cc]over|노래방(?!에서)|직캠|모음|\[도서\])', item["snippet"]["title"]):
+                        if "snippet" in item and item["snippet"] and "title" in item["snippet"] and re.search(r'([Cc]over|노래방(?!에서)|직캠|모음|\[도서\]|축제|(\[MR|MR\]))', item["snippet"]["title"]):
                             continue
                         return item["id"]["videoId"], item["snippet"]["title"]
         else:
-            app.logger.debug("error in getting data of '%s' from youtube", song_name)
-            app.logger.debug(response.status_code)
-            app.logger.debug(response.text)
+            self.logger.debug("error in getting data of '%s' from youtube", song_name)
+            self.logger.debug(response.status_code)
+            self.logger.debug(response.text)
 
         return (None, None)
 
 
-    @staticmethod
-    def collect_song_name_list_from_chart(term: str, year: int, week: int) -> List[Tuple[str, int]]:
-        app.logger.debug("# collect_song_name_list_from_chart(term=%s, year=%d, week=%d)", term, year, week)
+    def collect_song_name_list_from_chart(self, term: str, year: int, week: int) -> List[Tuple[str, int]]:
+        self.logger.debug("# collect_song_name_list_from_chart(term=%s, year=%d, week=%d)", term, year, week)
         if term == "year":
             week_str = ""
         else:
@@ -85,7 +85,7 @@ class VideoManager:
                         result_list.append((title + " " + singer, year))
                         state = 0
         else:
-            app.logger.debug(response)
+            self.logger.debug(response)
 
         return result_list
 
@@ -97,11 +97,11 @@ class VideoManager:
         old_days = random.randrange(2011, last_year)
 
         # 주간(최신)
-        recent_week_song_name_list = VideoManager.collect_song_name_list_from_chart("week", this_year, week)
+        recent_week_song_name_list = self.collect_song_name_list_from_chart("week", this_year, week)
         # 작년
-        last_year_song_name_list = VideoManager.collect_song_name_list_from_chart("year", last_year, 0)
+        last_year_song_name_list = self.collect_song_name_list_from_chart("year", last_year, 0)
         # 작년 이전
-        old_days_song_name_list = VideoManager.collect_song_name_list_from_chart("year", old_days, 0)
+        old_days_song_name_list = self.collect_song_name_list_from_chart("year", old_days, 0)
 
         failure_count = 0
         for song_name, year in set(recent_week_song_name_list + last_year_song_name_list + old_days_song_name_list):
@@ -109,7 +109,7 @@ class VideoManager:
             video_id: Optional[str] = self.db_manager.get_video_id_by_song_name(song_name)
             if not video_id:
                 video_id, video_name = self.get_youtube_link(song_name)
-                app.logger.debug("song: %s -> vide: %s", song_name, video_name)
+                self.logger.debug("song: %s -> vide: %s", song_name, video_name)
                 # fast fallback
                 if not video_id:
                     failure_count = failure_count + 1
@@ -135,7 +135,7 @@ class VideoManager:
 
             if video_id:
                 video_url = VideoManager.video_url_prefix + video_id
-                app.logger.debug("video_url=%s", video_url)
+                self.logger.debug("video_url=%s", video_url)
                 return video_url
 
             failure_count = failure_count + 1

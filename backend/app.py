@@ -1,6 +1,10 @@
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+#!/usr/bin/env python
+
+
 import logging.config
+from flask import Flask
+from flask_cors import CORS
+
 
 app = Flask(__name__)
 app.config.from_object(__name__)
