@@ -8,6 +8,7 @@ import time
 from datetime import datetime, date
 from typing import List, Tuple, Optional
 import logging
+import urllib.parse
 import requests
 from util import Util
 from db_manager import DBManager
@@ -34,7 +35,7 @@ class VideoManager():
 
 
     def get_youtube_link(self, song_name: str) -> Tuple[Optional[str], Optional[str]]:
-        encoded_song_name = requests.utils.quote(song_name)
+        encoded_song_name = urllib.parse.quote(song_name)
         url = "https://www.googleapis.com/youtube/v3/search?part=id,snippet&key=%s&q=%s" % (self.conf["google_api_key"], encoded_song_name)
         response = requests.get(url)
         if response and response.status_code == 200:
